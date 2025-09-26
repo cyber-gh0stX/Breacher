@@ -1,103 +1,57 @@
-#!/usr/bin/env python3
+import requests #module for making request to a webpage
+import threading #module for multi-threading
+import argparse #module for parsing command line arguments
 
-import requests
-import threading
-import argparse
-import os
-import sys
-import time
+parser = argparse.ArgumentParser() #defines the parser
 
-parser = argparse.ArgumentParser()
+#Arguements that can be supplied
 parser.add_argument("-u", help="target url", dest='target')
 parser.add_argument("--path", help="custom path prefix", dest='prefix')
 parser.add_argument("--type", help="set the type i.e. html, asp, php", dest='type')
 parser.add_argument("--fast", help="uses multithreading", dest='fast', action="store_true")
-args = parser.parse_args()
+args = parser.parse_args() #arguments to be parsed
 
-# If -u wasn't supplied, prompt so the interactive menu will show
-if not args.target:
-    try:
-        provided = input("Enter target (example.com) or press Enter to exit: ").strip()
-        if not provided:
-            print("No target provided. Exiting.")
-            sys.exit(0)
-        args.target = provided
-    except (KeyboardInterrupt, EOFError):
-        print("\nExiting.")
-        sys.exit(0)
+target = args.target #Gets tarfet from argument
 
-# cross-platform clear
-def clear_screen():
-    if os.name == 'nt':
-        os.system('cls')
-    else:
-        os.system('clear')
-
-# banner (raw string to avoid escape warnings)
-def banner():
-    b = r'''
-\033[1;34m______   ______ _______ _______ _______ _     _ _______  ______
+#Fancy banner :p
+print ('''\033[1;34m______   ______ _______ _______ _______ _     _ _______  ______
 |_____] |_____/ |______ |_____| |       |_____| |______ |_____/
 |_____] |    \_ |______ |     | |_____  |     | |______ |    \_
                    CYBER ALPHA
 
-                          \033[37mMade with \033[91m<3\033[37m By D3V\033[1;m'''
-    print(b)
-    print()
-    print("  I am not responsible for your actions. If something errors out, the target may not be responding.")
-    print('\033[1;31m--------------------------------------------------------------------------\033[1;m\n')
+                          \033[37mMade with \033[91m<3\033[37m By D3V\033[1;m''')
 
-# Prepare target exactly like original logic
-target = args.target
+print ('''\n  I am not responsible for your shit and if you get some error while
+ running Breacher, there are good chances that target isn't responding.\n''')
+print ('\033[1;31m--------------------------------------------------------------------------\033[1;m\n')
+
 try:
-    target = target.replace('https://', '')
+    target = target.replace('https://', '') #Removes https://
 except:
     print ('\033[1;31m[-]\033[1;m -u argument is not supplied. Enter python breacher -h for help')
     quit()
 
-target = target.replace('http://', '')
-target = target.replace('/', '')
-target = 'http://' + target
+target = target.replace('http://', '') #and http:// from the url
+target = target.replace('/', '') #removes / from url so we can have example.com and not example.com/
+target = 'http://' + target #adds http:// before url so we have a perfect URL now
 if args.prefix != None:
     target = target + args.prefix
-
-# quick robots.txt check (UI-only)
-def show_robots():
-    try:
-        r = requests.get(target + '/robots.txt', timeout=6)
-        if '<html>' in r.text:
-            print ('  \033[1;31m[-]\033[1;m Robots.txt not found\n')
-        else:
-            print ('  \033[1;32m[+]\033[0m Robots.txt found. Check for any interesting entry\n')
-            print (r.text)
-    except:
+try:
+    r = requests.get(target + '/robots.txt') #Requests to example.com/robots.txt
+    if '<html>' in r.text: #if there's an html error page then its not robots.txt
         print ('  \033[1;31m[-]\033[1;m Robots.txt not found\n')
+    else: #else we got robots.txt
+        print ('  \033[1;32m[+]\033[0m Robots.txt found. Check for any interesting entry\n')
+        print (r.text)
+except: #if this request fails, we are getting robots.txt
+    print ('  \033[1;31m[-]\033[1;m Robots.txt not found\n')
+print ('\033[1;31m--------------------------------------------------------------------------\033[1;m\n')
 
-print_menu_sample_count = 8
-def preview_tools(n=print_menu_sample_count):
-    samples = []
-    try:
-        with open('paths.txt', 'r') as f:
-            for i, line in enumerate(f):
-                if i >= n:
-                    break
-                samples.append(line.strip())
-    except IOError:
-        samples = ["(paths.txt missing)"]
-    return samples
-
-# ========== ORIGINAL scanning logic (kept intact) ==========
 def scan(links):
     for link in links: #fetches one link from the links list
         link = target + link # Does this--> example.com/admin/
-        try:
-            r = requests.get(link, timeout=6) #Requests to the combined url
-            http = r.status_code #Fetches the http response code
-        except Exception:
-            # network errors shouldn't stop whole run — report and continue
-            print('  \033[1;31m[-]\033[1;m %s (request error)' % link)
-            continue
-
+        r = requests.get(link) #Requests to the combined url
+        http = r.status_code #Fetches the http response code
         if http == 200: #if its 200 the url points to valid resource i.e. admin panel
             print ('  \033[1;32m[+]\033[0m Admin panel found: %s'% link)
         elif http == 404: #404 means not found
@@ -106,7 +60,6 @@ def scan(links):
             print ('  \033[1;32m[+]\033[0m Potential EAR vulnerability found : ' + link)
         else:
             print ('  \033[1;31m[-]\033[1;m %s'% link)
-
 paths = [] #list of paths
 def get_paths(type):
     try:
@@ -134,101 +87,26 @@ def get_paths(type):
     except IOError:
         print ('\033[1;31m[-]\033[1;m Wordlist not found!')
         quit()
-# ========== end original logic ==========
 
-# Interactive menu (auto clears, shows tools preview, then runs original flow)
-def menu_run():
-    while True:
-        clear_screen()
-        banner()
-        show_robots()
-        print('\033[1;31m--------------------------------------------------------------------------\033[1;m\n')
-        print("Detected tools (sample from paths.txt):")
-        for s in preview_tools():
-            print("   -", s)
-        print()
-        print("Menu:")
-        print("  1) Start scan (normal)")
-        print("  2) Start scan (fast / multithread)")
-        print("  3) Exit")
-        print()
-        try:
-            choice = input("Choose an option (1-3) [default 1]: ").strip()
-        except (KeyboardInterrupt, EOFError):
-            print("\nExiting.")
-            sys.exit(0)
-
-        if choice == "" or choice == "1":
-            mode = "normal"
-        elif choice == "2":
-            mode = "fast"
-        else:
-            print("Goodbye.")
-            sys.exit(0)
-
-        # Prepare and run with EXACT original behavior (but fix slicing to work in py3)
-        type_arg = args.type or ""
-        get_paths(type_arg)
-        if not paths:
-            print("\nNo paths loaded from paths.txt. Nothing to scan.")
-            input("Press Enter to return to menu...")
-            continue
-
-        clear_screen()
-        banner()
-        print("Starting scan (mode: {})...\n".format(mode))
-
-        if mode == "fast" or args.fast:
-            # original code split used len(paths)/2 which breaks in py3; use integer division
-            mid = len(paths) // 2
-            paths1 = paths[:mid]
-            paths2 = paths[mid:]
-            def part1():
-                links = paths1
-                scan(links)
-            def part2():
-                links = paths2
-                scan(links)
-            t1 = threading.Thread(target=part1)
-            t2 = threading.Thread(target=part2)
-            t1.start()
-            t2.start()
-            # small spinner while threads run
-            spinner = "|/-\\"
-            idx = 0
-            while t1.is_alive() or t2.is_alive():
-                sys.stdout.write("\rScanning... " + spinner[idx % len(spinner)])
-                sys.stdout.flush()
-                idx += 1
-                time.sleep(0.15)
-            t1.join()
-            t2.join()
-            print("\nScan complete.")
-        else:
-            links = paths
-            scan(links)
-
-        input("\nScan finished. Press Enter to return to menu...")
-
-# If user passed --fast on CLI directly, preserve behavior and run without showing the menu
-if args.fast:
-    # Prepare paths and run exactly like original script would
-    type_arg = args.type or ""
-    get_paths(type_arg)
-    # If user expects no interactive menu, jump straight to scanning
-    mid = len(paths) // 2
-    paths1 = paths[:mid]
-    paths2 = paths[mid:]
-    def part1_cli():
-        scan(paths1)
-    def part2_cli():
-        scan(paths2)
-    t1 = threading.Thread(target=part1_cli)
-    t2 = threading.Thread(target=part2_cli)
-    t1.start()
-    t2.start()
-    t1.join()
-    t2.join()
-else:
-    # show interactive menu
-    menu_run()
+if args.fast == True: #if the user has supplied --fast argument
+    type = args.type #gets the input from --type argument
+    get_paths(type) #tells the link grabber to grab links according to user input like php, html, asp
+    paths1 = paths[:len(paths)/2] #The path/links list gets
+    paths2 = paths[len(paths)/2:] #divided into two lists
+    def part1():
+        links = paths1 #it is the first part of the list
+        scan(links) #calls the scanner
+    def part2():
+        links = paths2 #it is the second part of the list
+        scan(links) #calls the scanner
+    t1 = threading.Thread(target=part1) #Calls the part1 function via a thread
+    t2 = threading.Thread(target=part2) #Calls the part2 function via a thread
+    t1.start() #starts thread 1
+    t2.start() #starts thread 2
+    t1.join() #Joins both
+    t2.join() #of the threads
+else: #if --fast isn't supplied we go without threads
+    type = args.type
+    get_paths(type)
+    links = paths
+    scan(links)
