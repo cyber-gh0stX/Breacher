@@ -12,12 +12,11 @@ parser.add_argument("--fast", help="uses multithreading", dest='fast', action="s
 args = parser.parse_args() #arguments to be parsed
 
 target = args.target #Gets tarfet from argument
-#Fancy banner :p
-print('''\033______   ______ _______ _______ _______ _     _ _______  ______
+print('''\033[1;34m______   ______ _______ _______ _______ _     _ _______  ______
 |_____] |_____/ |______ |_____| |       |_____| |______ |_____/
-|_____] |    \\_ |______ |     | |_____  |     | |______ |    \\_\033'''
+|_____] |    \\_ |______ |     | |_____  |     | |______ |    \\_\033[0m''')
 
-                          \033[37mMade with \033[91m<3\033[37m By D3V\033[1;m''')
+print('\033[37mMade with \033[91m<3\033[37m By D3V\033[0m')
 
 print ('''\n  I am not responsible for your shit and if you get some error while
  running Breacher, there are good chances that target isn't responding. CYBER ALPHA\n''')
