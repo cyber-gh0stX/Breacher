@@ -15,13 +15,12 @@ target = args.target #Gets tarfet from argument
 #Fancy banner :p
 print('''\033______   ______ _______ _______ _______ _     _ _______  ______
 |_____] |_____/ |______ |_____| |       |_____| |______ |_____/
-|_____] |    \\_ |______ |     | |_____  |     | |______ |    \\_\033''')
-                   CYBER ALPHA
+|_____] |    \\_ |______ |     | |_____  |     | |______ |    \\_\033'''
 
                           \033[37mMade with \033[91m<3\033[37m By D3V\033[1;m''')
 
 print ('''\n  I am not responsible for your shit and if you get some error while
- running Breacher, there are good chances that target isn't responding.\n''')
+ running Breacher, there are good chances that target isn't responding. CYBER ALPHA\n''')
 print ('\033[1;31m--------------------------------------------------------------------------\033[1;m\n')
 
 try:
